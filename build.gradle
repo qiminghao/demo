@@ -1,0 +1,204 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven { url 'https://maven.aliyun.com/repository/public/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:3.0.2'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.0.2'
+    id 'io.spring.dependency-management' version '1.1.0'
+}
+
+group = 'com.haohaoit'
+version = '0.0.1-SNAPSHOT'
+
+ext {
+    springbootVersion = '3.0.2'
+    lombokVersion = '1.18.26'
+    dubboVersion = '3.1.6'
+    druidVersion = '1.2.15'
+    mysqlVersion = '8.0.32'
+    springtxVersion = '6.0.5'
+    mybatisVersion = '3.5.11'
+    log4jVersion = '2.19.0'
+    slf4jVersion = '1.7.36'
+    mybatisSpringVersion = '3.0.1'
+    mybatisGeneratorVersion = '1.4.1'
+    aspectjVersion = '1.9.19'
+    rocketmqVersion = '5.0.0'
+    rocketmqStarterVersion = '2.2.3'
+    guavaVersion = '31.1-jre'
+    protobufVersion = '3.22.0'
+    fastjsonVersion = '2.0.23'
+    tkMapperVersion = '3.5.2'
+
+    env = System.getProperty("env") == null ? "base" : System.getProperty("env")
+}
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    group = rootProject.group
+    version = rootProject.version
+
+    sourceCompatibility = JavaVersion.VERSION_19
+    targetCompatibility = JavaVersion.VERSION_19
+
+    repositories {
+        mavenLocal()
+        maven { url 'https://maven.aliyun.com/repository/public/' }
+        mavenCentral()
+    }
+
+    configurations.all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
+        resolutionStrategy {
+            failOnVersionConflict()
+
+            force "com.google.guava:guava:$guavaVersion"
+            force "com.alibaba:fastjson:$fastjsonVersion"
+            force "com.alibaba.fastjson2:fastjson2:$fastjsonVersion"
+            force "com.google.protobuf:protobuf-java:$protobufVersion"
+            force "org.apache.logging.log4j:log4j-core:$log4jVersion"
+            force "org.apache.logging.log4j:log4j-api:$log4jVersion"
+            force "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
+            force "org.slf4j:slf4j-api:$slf4jVersion"
+        }
+    }
+
+    dependencies {
+        if (project.name.endsWith('-contract')) {
+            return
+        }
+
+        api "org.springframework.boot:spring-boot-starter:$springbootVersion"
+        api "org.springframework.boot:spring-boot-starter-web:$springbootVersion"
+        api "org.springframework.boot:spring-boot-starter-aop:$springbootVersion"
+        api "org.apache.rocketmq:rocketmq-spring-boot-starter:$rocketmqStarterVersion"
+        api "org.apache.logging.log4j:log4j-core:$log4jVersion"
+        api "org.apache.logging.log4j:log4j-api:$log4jVersion"
+        api "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
+        api "org.slf4j:slf4j-api:$slf4jVersion"
+        api "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        runtimeOnly "org.aspectj:aspectjweaver:$aspectjVersion"
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+    task sourceJar(type: Jar, dependsOn: classes) {
+        from sourceSets.main.allSource
+    }
+
+    sourceSets {
+        main { resources { srcDirs = ["src/main/resources"] } }
+        test { resources { srcDirs = ["src/main/resources"] } }
+    }
+}
+
+// 对外暴露http服务
+project(":demo-api") {
+    dependencies {
+        api project(':demo-common')
+        api project(':demo-integration')
+        api project(':demo-repository')
+        api project(':demo-core')
+    }
+}
+
+// 处理一些内部任务
+project(":demo-task") {
+    dependencies {
+        api project(':demo-common')
+        api project(':demo-integration')
+        api project(':demo-repository')
+        api project(':demo-core')
+    }
+}
+
+// 处理mq消息
+project(":demo-message") {
+    dependencies {
+        api project(':demo-common')
+        api project(':demo-integration')
+        api project(':demo-repository')
+        api project(':demo-core')
+    }
+}
+
+// 对外暴露rpc服务
+project(":demo-service") {
+    dependencies {
+        api project(':demo-contract')
+        api project(':demo-common')
+        api project(':demo-integration')
+        api project(':demo-repository')
+        api project(':demo-core')
+
+        api "org.apache.dubbo:dubbo-spring-boot-starter:$dubboVersion"
+    }
+}
+
+project(":demo-repository") {
+    dependencies {
+        api project(':demo-common')
+
+        api "com.mysql:mysql-connector-j:$mysqlVersion"
+        api "org.mybatis:mybatis:$mybatisVersion"
+        api "org.mybatis:mybatis-spring:$mybatisSpringVersion"
+        api "org.springframework:spring-tx:$springtxVersion"
+        api "org.springframework.boot:spring-boot-starter-jdbc:$springbootVersion"
+        api "org.mybatis.generator:mybatis-generator-core:$mybatisGeneratorVersion"
+        api "com.alibaba:druid-spring-boot-starter:$druidVersion"
+    }
+
+//    task mybatisGenerate {
+//        ant.taskdef(
+//                name: 'mbgenerator',
+//                classname: 'org.mybatis.generator.ant.GeneratorAntTask',
+//                classpath: configurations.mybatisGenerator.asPath
+//        )
+//        ant.echo(configurations.mybatisGenerator.asPath)
+//        ant.echo(rootDir.name)
+//        ant.mbgenerator(overwrite: true,
+//                configfile: 'demo-repository/src/main/resources/base/mybatisGeneratorConfig.xml', verbose: true) {
+//        }
+//    }
+}
+
+project(":demo-integration") {
+    dependencies {
+        api project(':demo-common')
+    }
+}
+
+project(":demo-core") {
+    dependencies {
+        api project(':demo-common')
+        api project(':demo-repository')
+    }
+}
+
+
+project(":demo-contract") {
+    dependencies {
+        api project(':demo-common')
+    }
+}
+
+project(":demo-common") {
+    dependencies {
+
+    }
+}

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<!-- 配置生成器 -->
+<generatorConfiguration>
+    <context id="mysql" targetRuntime="MyBatis3">
+
+        <!-- 生成的Java文件的编码 -->
+        <property name="javaFileEncoding" value="UTF-8"/>
+        <!-- 格式化java代码 -->
+        <property name="javaFormatter" value="org.mybatis.generator.api.dom.DefaultJavaFormatter"/>
+        <!-- 格式化XML代码 -->
+        <property name="xmlFormatter" value="org.mybatis.generator.api.dom.DefaultXmlFormatter"/>
+
+        <plugin type="com.haohaoit.demo.repository.mybatis.plugins.RemoveDeleteMethodPlugin"/>
+        <plugin type="com.haohaoit.demo.repository.mybatis.plugins.BatchInsertPlugin"/>
+        <plugin type="com.haohaoit.demo.repository.mybatis.plugins.BatchUpsertPlugin"/>
+        <plugin type="com.haohaoit.demo.repository.mybatis.plugins.LombokPlugin"/>
+        <plugin type="com.haohaoit.demo.repository.mybatis.plugins.LogicalDeletePlugin"/>
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>
+        <plugin type="org.mybatis.generator.plugins.MapperAnnotationPlugin"/>
+        <plugin type="org.mybatis.generator.plugins.UnmergeableXmlMappersPlugin"/>
+
+        <commentGenerator>
+            <property name="suppressDate" value="true"/>
+            <property name="suppressAllComments" value="true" />
+        </commentGenerator>
+
+
+        <jdbcConnection
+                driverClass="com.mysql.cj.jdbc.Driver"
+                connectionURL="jdbc:mysql://127.0.0.1:3306/test"
+                userId="root"
+                password="123456"/>
+
+        <!-- java类型处理器
+            用于处理DB中的类型到Java中的类型，默认使用JavaTypeResolverDefaultImpl；
+            注意一点，默认会先尝试使用Integer，Long，Short等来对应DECIMAL和 NUMERIC数据类型；
+        -->
+        <javaTypeResolver type="org.mybatis.generator.internal.types.JavaTypeResolverDefaultImpl">
+            <property name="forceBigDecimals" value="true"/>
+            <property name="useJSR310Types" value="true"/>
+        </javaTypeResolver>
+
+        <javaModelGenerator targetPackage="com.haohaoit.demo.repository.mybatis.po" targetProject="src/main/java">
+            <!-- 设置是否在getter方法中，对String类型字段调用trim()方法 -->
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <sqlMapGenerator
+                targetPackage="com.haohaoit.demo.repository.mybatis.mapper"
+                targetProject="src/main/resources"/>
+        <javaClientGenerator
+                targetPackage="com.haohaoit.demo.repository.mybatis.mapper"
+                type="XMLMAPPER"
+                targetProject="src/main/java"/>
+
+        <table tableName="runoob_tbl">
+            <generatedKey column="runoob_id" sqlStatement="JDBC"/>
+        </table>
+
+    </context>
+
+</generatorConfiguration>
